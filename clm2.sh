@@ -12,7 +12,7 @@ NC='\033[0m'
         printf "${green}Cleaning all the shits from Magento...${NC}\n"
         echo
         sudo rm -rf pub/static/*
-        sudo rm -rf var/generation
+        sudo rm -rf var/generation/*
         sudo rm -rf var/cache/
         sudo rm -rf var/page_cache/
         sudo rm -rf var/view_preprocessed/
@@ -28,7 +28,7 @@ NC='\033[0m'
         printf "${green}Cleaning all the shits from Magento 2.2 or higher...${NC}\n"
         echo
         sudo rm -rf pub/static/*
-        sudo rm -rf generated
+        sudo rm -rf generated/*
         sudo rm -rf var/cache/
         sudo rm -rf var/page_cache/
         sudo rm -rf var/view_preprocessed/
@@ -43,7 +43,7 @@ NC='\033[0m'
         echo
         printf "${green}Compiling Magento...${NC}\n"
         echo
-        sudo rm -rf var/generation
+        sudo rm -rf var/generation/*
         sudo php bin/magento setup:di:compile
         sudo php bin/magento cache:flush
         sudo chmod 777 -R *
@@ -55,7 +55,7 @@ NC='\033[0m'
         echo
         printf "${green}Compiling Magento 2.2 or higher...${NC}\n"
         echo
-        sudo rm -rf generated
+        sudo rm -rf generated/*
         sudo php bin/magento setup:di:compile
         sudo php bin/magento cache:flush
         sudo chmod 777 -R *
