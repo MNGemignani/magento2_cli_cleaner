@@ -1,83 +1,149 @@
-#!/usr/bin/env bash
+#! /bin/bash
 
-clm2 () {
+# Styles variables
 bold=$(tput bold)
 normal=$(tput sgr0)
 red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 NC='\033[0m'
-    if [ "$1" == "-a" ] || [ "$1" == "--clean-all" ]; then
-        echo
-        printf "${green}Cleaning all the shits from Magento...${NC}\n"
-        echo
-        sudo rm -rf pub/static/*
-        sudo rm -rf var/generation/*
-        sudo rm -rf var/cache/
-        sudo rm -rf var/page_cache/
-        sudo rm -rf var/view_preprocessed/
-        sudo php bin/magento setup:di:compile
-        sudo php bin/magento cache:flush
-        sudo chmod 777 -R *
-        echo
-        printf "${green}All done!${NC}\n"
-        echo
+PARAMETER=$1
 
-    elif [ "$1" == "-a2" ] || [ "$1" == "--clean-all2" ]; then
-        echo
-        printf "${green}Cleaning all the shits from Magento 2.2 or higher...${NC}\n"
-        echo
-        sudo rm -rf pub/static/*
-        sudo rm -rf generated/*
-        sudo rm -rf var/cache/
-        sudo rm -rf var/page_cache/
-        sudo rm -rf var/view_preprocessed/
-        sudo php bin/magento setup:di:compile
-        sudo php bin/magento cache:flush
-        sudo chmod 777 -R *
-        echo
-        printf "${green}All done!${NC}\n"
-        echo
+printStartMessage () {
 
-    elif [ "$1" == "-c" ] || [ "$1" == "--compile" ]; then
-        echo
-        printf "${green}Compiling Magento...${NC}\n"
-        echo
-        sudo rm -rf var/generation/*
-        sudo php bin/magento setup:di:compile
-        sudo php bin/magento cache:flush
-        sudo chmod 777 -R *
-        echo
-        printf "${green}Compiled!${NC}\n"
-        echo
+    echo
+    printf "${green}Let's starts!${NC}\n"
+    echo
+}
 
-    elif [ "$1" == "-c2" ] || [ "$1" == "--compile2" ]; then
-        echo
-        printf "${green}Compiling Magento 2.2 or higher...${NC}\n"
-        echo
-        sudo rm -rf generated/*
-        sudo php bin/magento setup:di:compile
-        sudo php bin/magento cache:flush
-        sudo chmod 777 -R *
-        echo
-        printf "${green}Compiled!${NC}\n"
-        echo
+printEndMessage () {
 
-    elif [ "$1" == "-s" ] || [ "$1" == "--clean-static" ]; then
-        echo
-        printf "${green}Removing Magento static files...${NC}\n"
-        echo
-        sudo rm -rf pub/static/*
-        sudo rm -rf var/cache/
-        sudo rm -rf var/page_cache/
-        sudo rm -rf var/view_preprocessed/
-        sudo php bin/magento cache:flush
-        sudo chmod 777 -R *
-        echo
-        printf "${green}All clean!${NC}\n"
-        echo
+    echo
+    printf "${green}All done!${NC}\n"
+    echo
 
-    elif [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+}
+
+clearStatic () {
+
+    rm -rf pub/static/*
+    checkExitStatus
+    printf "${green}Clearing static folder complete${NC}\n"
+
+}
+
+recompile () {
+
+    rm -rf generated/
+    checkExitStatus
+    php bin/magento setup:di:compile
+    checkExitStatus
+    printf "${green}Remcompiled${NC}\n"
+
+}
+
+upgrade () {
+
+    php bin/magento setup:upgrade
+    checkExitStatus
+    printf "${green}Upgraded${NC}\n"
+
+}
+
+reindex () {
+
+    php bin/magento indexer:reindex
+    checkExitStatus
+    printf "${green}Reindexed${NC}\n"
+
+}
+
+clearCache () {
+
+    rm -rf var/cache/ && rm -rf var/page_cache/ && rm -rf var/view_preprocessed/
+    checkExitStatus
+    printf "${green}Clearing cache complete${NC}\n"
+
+}
+
+checkExitStatus () {
+
+    retVal=$?
+    if [[ $retVal -ne 0 ]]; then
+        printf "${red}Something went wrong${NC}\n"
+        exit $retVal
+    fi
+
+}
+
+givePermissions () {
+
+    chmod 777 -R *
+    checkExitStatus
+
+}
+
+clm2 () {
+
+    if [ "$PARAMETER" == "-a" ] || [ "$PARAMETER" == "--clean-all" ]; then
+
+        printStartMessage
+        clearCache
+        clearStatic
+        recompile
+        givePermissions
+        printEndMessage
+
+    elif [ "$PARAMETER" == "-au" ] || [ "$PARAMETER" == "--clean-all-upgrade" ]; then
+
+        printStartMessage
+        clearCache
+        clearStatic
+        upgrade
+        recompile
+        givePermissions
+        printEndMessage
+
+    elif [ "$PARAMETER" == "-ai" ] || [ "$PARAMETER" == "--clean-all-reindex" ]; then
+
+        printStartMessage
+        clearCache
+        clearStatic
+        reindex
+        recompile
+        givePermissions
+        printEndMessage
+
+    elif [ "$PARAMETER" == "-aui" ] || [ "$PARAMETER" == "--clean-all-upgrade-reindex" ]; then
+
+        printStartMessage
+        clearCache
+        clearStatic
+        upgrade
+        recompile
+        reindex
+        givePermissions
+        printEndMessage
+
+    elif [ "$PARAMETER" == "-c" ] || [ "$PARAMETER" == "--compile" ]; then
+
+        printStartMessage
+        clearCache
+        recompile
+        givePermissions
+        printEndMessage
+
+
+    elif [ "$PARAMETER" == "-s" ] || [ "$PARAMETER" == "--clean-static" ]; then
+
+        printStartMessage
+        clearStatic
+        clearCache
+        givePermissions
+        printEndMessage
+
+    elif [ "$PARAMETER" == "--help" ] || [ "$PARAMETER" == "-h" ]; then
+
         echo
         echo "${bold}NAME${normal}"
         echo
@@ -86,25 +152,26 @@ NC='\033[0m'
         echo
         echo "${bold}DESCRIPTION${normal}"
         echo
-        echo "      Possible commands:"
-        echo
-        echo "              -a, --clean-all | -a2, --clean-all2 | -c, --compile | -c2, --compile2 | -s, --clean-static "
-        echo
         echo "      -a, --clean-all"
         echo
-        echo "              Remove all generated files (cache and classes) from magento2.0 and 2.1 and re-compiles"
+        echo "              Remove all generated files (cache and classes) and re-compiles"
         echo
-        echo "      -a2, --clean-all2"
+        echo "      -au, --clean-all-upgrade"
         echo
-        echo "              Remove all generated files (cache and classes) from magento2.2 (and higher) and re-compiles"
+        echo "              Remove all generated files (cache and classes), run setup:upgrade and re-compiles"
+        echo
+        echo "      -ai, --clean-all-reindex"
+        echo
+        echo "              Remove all generated files (cache and classes), run indexer:reindex and re-compiles"
+        echo
+        echo "      -aui, --clean-all-upgrade-reindex"
+        echo
+        echo "              Remove all generated files (cache and classes), run setup:upgrade, run indexer:reindex and re-compiles"
         echo
         echo "      -c, --compile"
         echo
         echo "              Remove all generated files (classes) from magento2.0 and 2.1 and re-compiles"
         echo
-        echo "      -c2, --compile2"
-        echo
-        echo "              Remove all generated files (classes) from magento2.2 (and higher) and re-compiles"
         echo
         echo "      -s, --clean-static"
         echo
@@ -122,27 +189,21 @@ NC='\033[0m'
         echo
         echo "      Written by Mateus Gemignani"
         echo
-        echo "${bold}NOTES${normal}"
+        printf "${red}Your current magento 2 version is: ${NC}\n"
         echo
-        echo "      If your Magento2 version is 2.2 or higher you need to add a 2 in front of -a (--clean-all) and -c (--compile) commands"
-        echo
-        echo "Your current magento 2 version is: "
-        echo
-        sudo php bin/magento -V
+        php bin/magento -V
         echo
     else
         echo
-        printf "${green}You need to choose a command: --clean-all | --clean-all2 | --compile | --compile2 | --clean-static ${NC}\n"
+        printf "${green}You need to choose a command${NC}\n"
         echo
-        printf "${green}Or one of the short cuts: -a | -a2 | -c | -c2 | -s ${NC}\n"
+        printf "${yellow}If you need help type: clm2 --help${NC}\n"
         echo
-        printf "${yellow}If you need help type: clm2 --help or -h${NC}\n"
+        printf "${red}Your current magento 2 version is: ${NC}\n"
         echo
-        printf "${red}If your Magento2 version is 2.2 or higher you need to add a 2 in front of -a and -c commands${NC}\n"
-        echo
-        echo "Your current magento 2 version is: "
-        echo
-        sudo php bin/magento -V
+        php bin/magento -V
         echo
     fi
 }
+
+clm2
