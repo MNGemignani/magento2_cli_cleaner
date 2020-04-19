@@ -1,13 +1,35 @@
 #! /bin/bash
 
-# Styles variables
+# Style variables
 bold=$(tput bold)
 normal=$(tput sgr0)
 red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 NC='\033[0m'
+# End Style variables
+
 PARAMETER=$1
+
+checkHasSlash () {
+
+    if [[ !("$1" == "-") ]]  || [[ "$1" == "" ]]
+    then
+        printErrorMessage
+        exit 1
+    fi
+
+}
+
+checkParameter () {
+
+    if [[ !(${PARAMETER} =~ .*-.*) ]]
+    then
+       printErrorMessage
+       exit 1
+    fi
+
+}
 
 printStartMessage () {
 
@@ -83,127 +105,148 @@ givePermissions () {
 
 }
 
-clm2 () {
+printHelpMessage () {
 
-    if [ "$PARAMETER" == "-a" ] || [ "$PARAMETER" == "--clean-all" ]; then
+    echo
+    echo "${bold}NAME${normal}"
+    echo
+    echo "      clm2 <Commands>"
+    echo
+    echo
+    echo "${bold}DESCRIPTION${normal}"
+    echo
+    echo "      -a, --clean-all"
+    echo
+    echo "              Remove all generated files (cache and classes) and re-compiles"
+    echo
+    echo "      -au, --clean-all-upgrade"
+    echo
+    echo "              Remove all generated files (cache and classes), run setup:upgrade and re-compiles"
+    echo
+    echo "      -ai, --clean-all-reindex"
+    echo
+    echo "              Remove all generated files (cache and classes), run indexer:reindex and re-compiles"
+    echo
+    echo "      -aui, --clean-all-upgrade-reindex"
+    echo
+    echo "              Remove all generated files (cache and classes), run setup:upgrade, run indexer:reindex and re-compiles"
+    echo
+    echo "      -c, --compile"
+    echo
+    echo "              Remove all generated files (classes) from magento2.0 and 2.1 and re-compiles"
+    echo
+    echo
+    echo "      -s, --clean-static"
+    echo
+    echo "              Remove all static files (js and cache) from magento2"
+    echo
+    echo "${bold}EXAMPLE${normal}"
+    echo
+    echo "      Clear all static files: clm2 -s"
+    echo
+    echo "      OR"
+    echo
+    echo "      Clear all static files: clm2 --clean-static"
+    echo
+    echo "${bold}AUTHOR${normal}"
+    echo
+    echo "      Written by Mateus Gemignani"
+    echo
+    printf "${red}Your current magento 2 version is: ${NC}\n"
+    echo
+    php bin/magento -V
+    echo
 
-        printStartMessage
-        clearCache
-        clearStatic
-        recompile
-        givePermissions
-        printEndMessage
-
-    elif [ "$PARAMETER" == "-au" ] || [ "$PARAMETER" == "--clean-all-upgrade" ]; then
-
-        printStartMessage
-        clearCache
-        clearStatic
-        upgrade
-        recompile
-        givePermissions
-        printEndMessage
-
-    elif [ "$PARAMETER" == "-ai" ] || [ "$PARAMETER" == "--clean-all-reindex" ]; then
-
-        printStartMessage
-        clearCache
-        clearStatic
-        reindex
-        recompile
-        givePermissions
-        printEndMessage
-
-    elif [ "$PARAMETER" == "-aui" ] || [ "$PARAMETER" == "--clean-all-upgrade-reindex" ]; then
-
-        printStartMessage
-        clearCache
-        clearStatic
-        upgrade
-        recompile
-        reindex
-        givePermissions
-        printEndMessage
-
-    elif [ "$PARAMETER" == "-c" ] || [ "$PARAMETER" == "--compile" ]; then
-
-        printStartMessage
-        clearCache
-        recompile
-        givePermissions
-        printEndMessage
-
-
-    elif [ "$PARAMETER" == "-s" ] || [ "$PARAMETER" == "--clean-static" ]; then
-
-        printStartMessage
-        clearStatic
-        clearCache
-        givePermissions
-        printEndMessage
-
-    elif [ "$PARAMETER" == "--help" ] || [ "$PARAMETER" == "-h" ]; then
-
-        echo
-        echo "${bold}NAME${normal}"
-        echo
-        echo "      clm2 <Commands>"
-        echo
-        echo
-        echo "${bold}DESCRIPTION${normal}"
-        echo
-        echo "      -a, --clean-all"
-        echo
-        echo "              Remove all generated files (cache and classes) and re-compiles"
-        echo
-        echo "      -au, --clean-all-upgrade"
-        echo
-        echo "              Remove all generated files (cache and classes), run setup:upgrade and re-compiles"
-        echo
-        echo "      -ai, --clean-all-reindex"
-        echo
-        echo "              Remove all generated files (cache and classes), run indexer:reindex and re-compiles"
-        echo
-        echo "      -aui, --clean-all-upgrade-reindex"
-        echo
-        echo "              Remove all generated files (cache and classes), run setup:upgrade, run indexer:reindex and re-compiles"
-        echo
-        echo "      -c, --compile"
-        echo
-        echo "              Remove all generated files (classes) from magento2.0 and 2.1 and re-compiles"
-        echo
-        echo
-        echo "      -s, --clean-static"
-        echo
-        echo "              Remove all static files (js and cache) from magento2"
-        echo
-        echo "${bold}EXAMPLE${normal}"
-        echo
-        echo "      Clear all static files: clm2 -s"
-        echo
-        echo "      OR"
-        echo
-        echo "      Clear all static files: clm2 --clean-static"
-        echo
-        echo "${bold}AUTHOR${normal}"
-        echo
-        echo "      Written by Mateus Gemignani"
-        echo
-        printf "${red}Your current magento 2 version is: ${NC}\n"
-        echo
-        php bin/magento -V
-        echo
-    else
-        echo
-        printf "${green}You need to choose a command${NC}\n"
-        echo
-        printf "${yellow}If you need help type: clm2 --help${NC}\n"
-        echo
-        printf "${red}Your current magento 2 version is: ${NC}\n"
-        echo
-        php bin/magento -V
-        echo
-    fi
 }
 
-clm2
+printErrorMessage () {
+
+    echo
+    printf "${green}Missing parameter${NC}\n"
+    echo
+    printf "${yellow}If you need help type: clm2 --help${NC}\n"
+    echo
+    printf "${red}Your current magento 2 version is: ${NC}\n"
+    echo
+    php bin/magento -V
+    echo
+
+}
+
+cleanAll () {
+
+    clearCache
+    clearStatic
+    upgrade
+    recompile
+    reindex
+    givePermissions
+
+}
+
+main () {
+    if [[ "$PARAMETER" == "" ]]
+    then
+        printErrorMessage
+        exit 1
+    fi
+
+    printStartMessage
+
+    for (( i=0; i<${#PARAMETER}; i++ )); do
+        if [[ "$i" == 0 ]]; then
+
+            checkHasSlash "${PARAMETER:$i:1}"
+
+        elif [[ "$i" == 1 ]] && [[ "${PARAMETER:$i:1}" == "-" ]] && [[ "${PARAMETER}" == "--help" ]]; then
+
+            printHelpMessage
+            exit 0
+
+        elif [[ "$i" == 1 ]] && [[ "${PARAMETER:$i:1}" == "-" ]] && [[ "${PARAMETER}" == "--all" ]]; then
+
+            cleanAll
+            exit 0
+
+        else
+
+            case ${PARAMETER:$i:1} in
+
+                c)
+                    #Clear the cache
+                    clearCache
+                    ;;
+
+                s)
+                    #Clear static folder
+                    clearStatic
+                    ;;
+
+                u)
+                    #Upgrade
+                    upgrade
+                    ;;
+
+                r)
+                    #Recompile
+                    recompile
+                    ;;
+
+                i)
+                    #Reindex
+                    reindex
+                    ;;
+
+                *)
+                    echo "This parameter doesn't do nothing: ${PARAMETER:$i:1}"
+                    ;;
+            esac
+
+            givePermissions
+        fi
+    done
+    printEndMessage
+
+}
+
+main
