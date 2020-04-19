@@ -108,45 +108,48 @@ givePermissions () {
 printHelpMessage () {
 
     echo
-    echo "${bold}NAME${normal}"
+    echo "${bold}USAGE${normal}"
     echo
-    echo "      clm2 <Commands>"
+    echo "      clm2 -<COMMAND><COMMAND>"
+    echo
+    echo "      clm2 --all"
+    echo
+    echo "      clm2 --help"
     echo
     echo
     echo "${bold}DESCRIPTION${normal}"
     echo
-    echo "      -a, --clean-all"
+    echo "      Add the letters after '-' to run the commands"
     echo
-    echo "              Remove all generated files (cache and classes) and re-compiles"
+    echo "      ${bold}c${normal}"
     echo
-    echo "      -au, --clean-all-upgrade"
+    echo "              Clean cache"
     echo
-    echo "              Remove all generated files (cache and classes), run setup:upgrade and re-compiles"
+    echo "      ${bold}s${normal}"
     echo
-    echo "      -ai, --clean-all-reindex"
+    echo "              Clean static folder"
     echo
-    echo "              Remove all generated files (cache and classes), run indexer:reindex and re-compiles"
+    echo "      ${bold}r${normal}"
     echo
-    echo "      -aui, --clean-all-upgrade-reindex"
+    echo "              Remove all generated files and re-compiles"
     echo
-    echo "              Remove all generated files (cache and classes), run setup:upgrade, run indexer:reindex and re-compiles"
+    echo "      ${bold}u${normal}"
     echo
-    echo "      -c, --compile"
+    echo "              Run setup:upgrade"
     echo
-    echo "              Remove all generated files (classes) from magento2.0 and 2.1 and re-compiles"
+    echo "      ${bold}i${normal}"
     echo
+    echo "              Run indexer:reindex"
     echo
-    echo "      -s, --clean-static"
+    echo "      With you want to run all commands just use:"
     echo
-    echo "              Remove all static files (js and cache) from magento2"
+    echo "      ${bold}--all${normal}"
     echo
     echo "${bold}EXAMPLE${normal}"
     echo
     echo "      Clear all static files: clm2 -s"
     echo
-    echo "      OR"
-    echo
-    echo "      Clear all static files: clm2 --clean-static"
+    echo "      Clear all static files, clear cache and recompile: clm2 -csr"
     echo
     echo "${bold}AUTHOR${normal}"
     echo
