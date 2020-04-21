@@ -10,6 +10,8 @@ NC='\033[0m'
 # End Style variables
 
 PARAMETER=$1
+PARAMETER2=$2
+PARAMETER3=$3
 
 checkHasSlash () {
 
@@ -60,7 +62,7 @@ recompile () {
     checkExitStatus
     php bin/magento setup:di:compile
     checkExitStatus
-    printf "${green}Remcompiled${NC}\n"
+    printf "${green}Recompiled${NC}\n"
 
 }
 
@@ -114,6 +116,8 @@ printHelpMessage () {
     echo
     echo "      clm2 --all"
     echo
+    echo "      clm2 --p -<COUNTRY_CODE>,<COUNTRY_CODE> -<COMMAND><COMMAND>"
+    echo
     echo "      clm2 --help"
     echo
     echo
@@ -141,15 +145,22 @@ printHelpMessage () {
     echo
     echo "              Run indexer:reindex"
     echo
-    echo "      With you want to run all commands just use:"
+    echo "      If you want to run all commands just use:"
     echo
     echo "      ${bold}--all${normal}"
+    echo
+    echo "      For production mode you can you need to start with --p and pass second parameter the country code separated by coma"
+    echo "      You can also add -i , -u or -iu to run setup:upgrade and indexer:reindex"
+    echo
+    echo "      ${bold}--p -<COUNTRY_CODE>,<COUNTRY_CODE> -<COMMAND>${normal}"
     echo
     echo "${bold}EXAMPLE${normal}"
     echo
     echo "      Clear all static files: clm2 -s"
     echo
     echo "      Clear all static files, clear cache and recompile: clm2 -csr"
+    echo
+    echo "      Production mode run static content for en_EN and nl_NL and reindex; clm2 --p -nl,en -i"
     echo
     echo "${bold}AUTHOR${normal}"
     echo
@@ -187,6 +198,90 @@ cleanAll () {
 
 }
 
+staticContentDeploy () {
+
+    bin/magento static:content:deploy "$1"
+    checkExitStatus
+    echo
+    printf "${green}Finish static content deploy for $1${NC}\n"
+
+}
+
+givePermissionsProd () {
+
+    find ./var -type d -exec chmod 777 {} \ && find ./pub/media -type d -exec chmod 777 {} \ && find ./pub/static -type d -exec chmod 777 {} \
+    chmod 777 ./app/etc && chmod 644 ./app/etc/*.xml
+    checkExitStatus
+
+}
+
+productionMode () {
+
+    if [[ "$PARAMETER2" == "" ]]; then
+
+        printErrorMessage
+        exit 1
+
+    fi
+
+    #Start process
+    bin/magento maintenance:enabled
+    checkExitStatus
+    clearCache
+    clearStatic
+
+    if [[ ${PARAMETER3} =~ .*u.* ]]
+    then
+        upgrade
+        checkExitStatus
+    fi
+
+    recompile
+
+    for (( i=0; i<${#PARAMETER2}; i+=3 )); do
+
+        clearCache
+        local p1=${PARAMETER2:$i:2}
+        case ${p1,,} in
+
+            nl)
+                staticContentDeploy "nl_NL"
+                ;;
+
+            en)
+                staticContentDeploy "en_EN"
+                clearCache
+                staticContentDeploy "en_GB"
+                ;;
+
+            de)
+                staticContentDeploy "de_DE"
+                ;;
+
+            *)
+                echo "This parameter doesn't match any available country code: ${PARAMETER:$i:2}"
+                echo "Current available country codes: nl, en, de (case doesn't matter)"
+                ;;
+            esac
+
+
+    done
+
+    clearCache
+
+    if [[ ${PARAMETER3} =~ .*i.* ]]
+    then
+        reindex
+        checkExitStatus
+    fi
+
+    bin/magento maintenance:disable
+    givePermissionsProd
+
+    printEndMessage
+
+}
+
 main () {
     if [[ "$PARAMETER" == "" ]]
     then
@@ -209,6 +304,11 @@ main () {
         elif [[ "$i" == 1 ]] && [[ "${PARAMETER:$i:1}" == "-" ]] && [[ "${PARAMETER}" == "--all" ]]; then
 
             cleanAll
+            exit 0
+
+        elif [[ "$i" == 1 ]] && [[ "${PARAMETER:$i:1}" == "-" ]] && [[ "${PARAMETER}" == "--p" ]]; then
+
+            productionMode
             exit 0
 
         else

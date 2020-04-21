@@ -13,6 +13,8 @@
   
   Run `$ ./clm2.sh -[command]` (from the directory where the file is, or add the file to your PATH, or to a `bin` folder in your `home` directory).
   
+  For production mode you need to add `--p` as first parameter, second parameter `-<COUNTRY_CODE><COUNTRY_CODE>` and optionally a third parameter with `-i` , `-u` or `-iu` for reindex or upgrade
+  
   
 ### Possible Commands:
 
@@ -28,16 +30,25 @@
     
     i       Run indexer:reindex
             
-    With you want to run all commands just use:
+    If you want to run all commands just use:
     
     --all   Same as -csuri
+    
+    For production mode you can you need to start with --p and pass second parameter the country code separated by coma
+    You can also add -i , -u or -iu to run setup:upgrade and indexer:reindex
+    
+    --p -<COUNTRY_CODE>,<COUNTRY_CODE> -<COMMAND>
+    
+    Available country codes: nl | en | de
               
               
 ### Example
               
-        Clear all static files: clm2.sh -s"
+   Clear all static files: `clm2.sh -s`
         
-        Clear all static files, clear cache and recompile: clm2.sh -csr"
+   Clear all static files, clear cache and recompile: `clm2.sh -csr`
+        
+   Production mode run static content for en_EN and nl_NL and reindex; `clm2 --p -nl,en -i`
 
 ### Information:
 
