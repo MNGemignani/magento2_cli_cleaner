@@ -13,34 +13,34 @@ PARAMETER=$1
 PARAMETER2=$2
 PARAMETER3=$3
 
-checkHasSlash () {
+_checkHasSlash () {
 
     if [[ !("$1" == "-") ]]  || [[ "$1" == "" ]]
     then
-        printErrorMessage
+        _printErrorMessage
         exit 1
     fi
 
 }
 
-checkParameter () {
+_checkParameter () {
 
     if [[ !(${PARAMETER} =~ .*-.*) ]]
     then
-       printErrorMessage
+       _printErrorMessage
        exit 1
     fi
 
 }
 
-printStartMessage () {
+_printStartMessage () {
 
     echo
     printf "${green}Let's starts!${NC}\n"
     echo
 }
 
-printEndMessage () {
+_printEndMessage () {
 
     echo
     printf "${green}All done!${NC}\n"
@@ -48,49 +48,7 @@ printEndMessage () {
 
 }
 
-clearStatic () {
-
-    rm -rf pub/static/*
-    checkExitStatus
-    printf "${green}Clearing static folder complete${NC}\n"
-
-}
-
-recompile () {
-
-    rm -rf generated/
-    checkExitStatus
-    php bin/magento setup:di:compile
-    checkExitStatus
-    printf "${green}Recompiled${NC}\n"
-
-}
-
-upgrade () {
-
-    php bin/magento setup:upgrade
-    checkExitStatus
-    printf "${green}Upgraded${NC}\n"
-
-}
-
-reindex () {
-
-    php bin/magento indexer:reindex
-    checkExitStatus
-    printf "${green}Reindexed${NC}\n"
-
-}
-
-clearCache () {
-
-    rm -rf var/cache/ && rm -rf var/page_cache/ && rm -rf var/view_preprocessed/
-    checkExitStatus
-    printf "${green}Clearing cache complete${NC}\n"
-
-}
-
-checkExitStatus () {
+_checkExitStatus () {
 
     retVal=$?
     if [[ $retVal -ne 0 ]]; then
@@ -100,14 +58,56 @@ checkExitStatus () {
 
 }
 
-givePermissions () {
+_clearStatic () {
 
-    chmod 777 -R *
-    checkExitStatus
+    rm -rf pub/static/*
+    _checkExitStatus
+    printf "${green}Clearing static folder complete${NC}\n"
 
 }
 
-printHelpMessage () {
+_recompile () {
+
+    rm -rf generated/
+    _checkExitStatus
+    php bin/magento setup:di:compile
+    _checkExitStatus
+    printf "${green}Recompiled${NC}\n"
+
+}
+
+_upgrade () {
+
+    php bin/magento setup:upgrade
+    _checkExitStatus
+    printf "${green}Upgraded${NC}\n"
+
+}
+
+_reindex () {
+
+    php bin/magento indexer:reindex
+    _checkExitStatus
+    printf "${green}Reindexed${NC}\n"
+
+}
+
+_clearCache () {
+
+    rm -rf var/cache/ && rm -rf var/page_cache/ && rm -rf var/view_preprocessed/
+    _checkExitStatus
+    printf "${green}Clearing cache complete${NC}\n"
+
+}
+
+_givePermissions () {
+
+    chmod 777 -R *
+    _checkExitStatus
+
+}
+
+_printHelpMessage () {
 
     echo
     echo "${bold}USAGE${normal}"
@@ -154,6 +154,12 @@ printHelpMessage () {
     echo
     echo "      ${bold}--p -<COUNTRY_CODE>,<COUNTRY_CODE> -<COMMAND>${normal}"
     echo
+    echo "      ${bold}<COUNTRY_CODE>${normal}"
+    echo "              Is the country code to run the static content deploy, separeted by comma, current support:"
+    echo "              - nl => nl_NL"
+    echo "              - en => en_EN and en_GB"
+    echo "              - de => de_DE"
+    echo
     echo "${bold}EXAMPLE${normal}"
     echo
     echo "      Clear all static files: clm2 -s"
@@ -173,7 +179,7 @@ printHelpMessage () {
 
 }
 
-printErrorMessage () {
+_printErrorMessage () {
 
     echo
     printf "${green}Missing parameter${NC}\n"
@@ -187,75 +193,75 @@ printErrorMessage () {
 
 }
 
-cleanAll () {
+_cleanAll () {
 
-    clearCache
-    clearStatic
-    upgrade
-    recompile
-    reindex
-    givePermissions
+    _clearCache
+    _clearStatic
+    _upgrade
+    _recompile
+    _reindex
+    _givePermissions
 
 }
 
-staticContentDeploy () {
+_staticContentDeploy () {
 
-    bin/magento static:content:deploy "$1"
-    checkExitStatus
+    php bin/magento static:content:deploy "$1"
+    _checkExitStatus
     echo
     printf "${green}Finish static content deploy for $1${NC}\n"
 
 }
 
-givePermissionsProd () {
+_givePermissionsProd () {
 
     find ./var -type d -exec chmod 777 {} \ && find ./pub/media -type d -exec chmod 777 {} \ && find ./pub/static -type d -exec chmod 777 {} \
     chmod 777 ./app/etc && chmod 644 ./app/etc/*.xml
-    checkExitStatus
+    _checkExitStatus
 
 }
 
-productionMode () {
+_productionMode () {
 
     if [[ "$PARAMETER2" == "" ]]; then
 
-        printErrorMessage
+        _printErrorMessage
         exit 1
 
     fi
 
     #Start process
-    bin/magento maintenance:enabled
-    checkExitStatus
-    clearCache
-    clearStatic
+    php bin/magento maintenance:enabled
+    _checkExitStatus
+    _clearCache
+    _clearStatic
 
     if [[ ${PARAMETER3} =~ .*u.* ]]
     then
-        upgrade
-        checkExitStatus
+        _upgrade
+        _checkExitStatus
     fi
 
-    recompile
+    _recompile
 
     for (( i=0; i<${#PARAMETER2}; i+=3 )); do
 
-        clearCache
+        _clearCache
         local p1=${PARAMETER2:$i:2}
         case ${p1,,} in
 
             nl)
-                staticContentDeploy "nl_NL"
+                _staticContentDeploy "nl_NL"
                 ;;
 
             en)
-                staticContentDeploy "en_EN"
-                clearCache
-                staticContentDeploy "en_GB"
+                _staticContentDeploy "en_EN"
+                _clearCache
+                _staticContentDeploy "en_GB"
                 ;;
 
             de)
-                staticContentDeploy "de_DE"
+                _staticContentDeploy "de_DE"
                 ;;
 
             *)
@@ -267,48 +273,48 @@ productionMode () {
 
     done
 
-    clearCache
+    _clearCache
 
     if [[ ${PARAMETER3} =~ .*i.* ]]
     then
-        reindex
-        checkExitStatus
+        _reindex
+        _checkExitStatus
     fi
 
-    bin/magento maintenance:disable
-    givePermissionsProd
+    php bin/magento maintenance:disable
+    _givePermissionsProd
 
-    printEndMessage
+    _printEndMessage
 
 }
 
 main () {
     if [[ "$PARAMETER" == "" ]]
     then
-        printErrorMessage
+        _printErrorMessage
         exit 1
     fi
 
-    printStartMessage
+    _printStartMessage
 
     for (( i=0; i<${#PARAMETER}; i++ )); do
         if [[ "$i" == 0 ]]; then
 
-            checkHasSlash "${PARAMETER:$i:1}"
+            _checkHasSlash "${PARAMETER:$i:1}"
 
         elif [[ "$i" == 1 ]] && [[ "${PARAMETER:$i:1}" == "-" ]] && [[ "${PARAMETER}" == "--help" ]]; then
 
-            printHelpMessage
+            _printHelpMessage
             exit 0
 
         elif [[ "$i" == 1 ]] && [[ "${PARAMETER:$i:1}" == "-" ]] && [[ "${PARAMETER}" == "--all" ]]; then
 
-            cleanAll
+            _cleanAll
             exit 0
 
         elif [[ "$i" == 1 ]] && [[ "${PARAMETER:$i:1}" == "-" ]] && [[ "${PARAMETER}" == "--p" ]]; then
 
-            productionMode
+            _productionMode
             exit 0
 
         else
@@ -317,27 +323,27 @@ main () {
 
                 c)
                     #Clear the cache
-                    clearCache
+                    _clearCache
                     ;;
 
                 s)
                     #Clear static folder
-                    clearStatic
+                    _clearStatic
                     ;;
 
                 u)
                     #Upgrade
-                    upgrade
+                    _upgrade
                     ;;
 
                 r)
                     #Recompile
-                    recompile
+                    _recompile
                     ;;
 
                 i)
                     #Reindex
-                    reindex
+                    _reindex
                     ;;
 
                 *)
@@ -345,11 +351,12 @@ main () {
                     ;;
             esac
 
-            givePermissions
+            _givePermissions
         fi
     done
-    printEndMessage
+    _printEndMessage
 
 }
 
+# Run command
 main
